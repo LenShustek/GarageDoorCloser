@@ -63,7 +63,7 @@ void setup() {
    pinMode(CLOSED_LIGHT, OUTPUT);
    //digitalWrite(LED, 0);
    //digitalWrite(RELAY, 0);
-   Timer1.initialize(500000);  // interrupt every half second
+   Timer1.initialize(100000);  // interrupt 10 times a second
    Timer1.attachInterrupt(do_status_lights);
    timeout = TIMEOUT_SECONDS;
    if (digitalRead(TEST_MODE) == ACTIVE)
@@ -71,8 +71,14 @@ void setup() {
 }
 
 void do_status_lights(void) {  // make the switch lights follow the switches
-   digitalWrite(OPEN_LIGHT, 1 - digitalRead(OPEN_SWITCH));
-   digitalWrite(CLOSED_LIGHT, 1 - digitalRead(CLOSED_SWITCH)); }
+   static int count_interrupts = 0;
+   if (++count_interrupts > 20) { // every two seconds, blink the lights off
+      count_interrupts = 0;      // to show that we are alive
+      digitalWrite(OPEN_LIGHT, 0);
+      digitalWrite(CLOSED_LIGHT, 0); }
+   else {
+      digitalWrite(OPEN_LIGHT, 1 - digitalRead(OPEN_SWITCH));
+      digitalWrite(CLOSED_LIGHT, 1 - digitalRead(CLOSED_SWITCH))  ; } }
 
 void beep (int frequency, int duration_msec) {
    // we don't use tone() because it interferes with pin 3
