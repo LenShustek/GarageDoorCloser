@@ -10,9 +10,10 @@
 //------------------------------------------------------------------------------------------------
 // 2017.05.26, L. Shustek. Built for Harry Saal.
 // 2017.07.09, L. Shustek. Add jumper which shortens delay for testing.
-// 2017.08.24, L. Shustek. Add light/sound warning, and pushbutton for cancelling
+// 2017.08.24, L. Shustek. Add optional light/sound warning, and pushbutton for cancelling
+// 2019.06.21, L. Shustek, Add optional lights to show the status of the switches
 //------------------------------------------------------------------------------------------------
-/*  (C) Copyright 2017, Len Shustek
+/*  (C) Copyright 2017,2019 Len Shustek
 
    This program is free software: you can redistribute it and/or modify it under the terms of
    version 3 of the GNU General Public License as published by the Free Software Foundation at
@@ -40,7 +41,12 @@
 #define BUTTON 5         // "cancel close" pushbutton
 #define BUTTON_LIGHT 6   // "door about to close" light
 #define SPEAKER 7        // "door about to close" sounder
+#define OPEN_LIGHT 9     // "door is open" switch is closed
+#define CLOSED_LIGHT 10  // "door is closed" switch is closed
+
 #define ACTIVE 0         // switches are active low
+
+#include <TimerOne.h>
 
 unsigned long timeout;
 
@@ -53,12 +59,20 @@ void setup() {
    pinMode(BUTTON, INPUT_PULLUP);
    pinMode(BUTTON_LIGHT, OUTPUT);
    pinMode(SPEAKER, OUTPUT);
+   pinMode(OPEN_LIGHT, OUTPUT);
+   pinMode(CLOSED_LIGHT, OUTPUT);
    //digitalWrite(LED, 0);
    //digitalWrite(RELAY, 0);
+   Timer1.initialize(500000);  // interrupt every half second
+   Timer1.attachInterrupt(do_status_lights);
    timeout = TIMEOUT_SECONDS;
    if (digitalRead(TEST_MODE) == ACTIVE)
       timeout /= 60;  // if test mode, convert timeout from minutes to seconds
 }
+
+void do_status_lights(void) {  // make the switch lights follow the switches
+   digitalWrite(OPEN_LIGHT, 1 - digitalRead(OPEN_SWITCH));
+   digitalWrite(CLOSED_LIGHT, 1 - digitalRead(CLOSED_SWITCH)); }
 
 void beep (int frequency, int duration_msec) {
    // we don't use tone() because it interferes with pin 3
